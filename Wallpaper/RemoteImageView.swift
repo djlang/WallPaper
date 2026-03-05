@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct RemoteImageView: View {
     private let url: URL?

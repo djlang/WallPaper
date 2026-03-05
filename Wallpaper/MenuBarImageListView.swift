@@ -78,16 +78,40 @@ struct MenuBarImageListView: View {
                                     .frame(width: 160, height: 118)
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                                Button {
-                                    viewModel.toggleFavorite(item)
-                                } label: {
-                                    Image(systemName: viewModel.isFavorite(item) ? "heart.fill" : "heart")
-                                        .font(.caption2)
-                                        .foregroundStyle(viewModel.isFavorite(item) ? .red : .white)
-                                        .padding(5)
-                                        .background(.black.opacity(0.5), in: Circle())
+                                HStack(spacing: 6) {
+                                    Button {
+                                        Task { await viewModel.downloadImage(for: item) }
+                                    } label: {
+                                        Image(systemName: "arrow.down.circle.fill")
+                                            .font(.caption)
+                                            .foregroundStyle(.white)
+                                            .padding(5)
+                                            .background(.black.opacity(0.5), in: Circle())
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    Button {
+                                        viewModel.copyImageLink(for: item)
+                                    } label: {
+                                        Image(systemName: "doc.on.doc.fill")
+                                            .font(.caption)
+                                            .foregroundStyle(.white)
+                                            .padding(5)
+                                            .background(.black.opacity(0.5), in: Circle())
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    Button {
+                                        viewModel.toggleFavorite(item)
+                                    } label: {
+                                        Image(systemName: viewModel.isFavorite(item) ? "heart.fill" : "heart")
+                                            .font(.caption2)
+                                            .foregroundStyle(viewModel.isFavorite(item) ? .red : .white)
+                                            .padding(5)
+                                            .background(.black.opacity(0.5), in: Circle())
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
                                 .padding(4)
                             }
                             .contextMenu {
@@ -99,7 +123,7 @@ struct MenuBarImageListView: View {
                                 }
                             }
 
-                            Text("作者：" + item.author)
+                            Text(item.author)
                                 .lineLimit(1)
                                 .font(.subheadline)
 

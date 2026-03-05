@@ -187,6 +187,43 @@ final class ImageViewModel: ObservableObject {
         }
         persistFavorites()
     }
+
+    func copyImageLink(for item: ImageItem) {
+        let link = resolvedImageLink(for: item)
+        guard link.isEmpty == false else {
+            errorMessage = "复制失败：图片链接无效"
+            return
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(link, forType: .string)
+    }
+
+    func downloadImage(for item: ImageItem) async {
+        let links = resolvedImageLinks(for: item)
+        guard links.isEmpty == false else {
+            errorMessage = "下载失败：图片链接无效"
+            return
+        }
+
+        var lastError: Error?
+        for link in links {
+            guard let url = URL(string: link) else { continue }
+            do {
+                let data = try await service.fetchImageData(from: url)
+                let savedURL = try saveImageData(data, itemId: item.id)
+                errorMessage = "已下载到：\(savedURL.lastPathComponent)"
+                return
+            } catch {
+                lastError = error
+            }
+        }
+
+        if let lastError {
+            errorMessage = "下载失败：\(lastError.localizedDescription)"
+        } else {
+            errorMessage = "下载失败：图片链接无效"
+        }
+    }
     
     // 设置壁纸（放在 ViewModel 里也可以，视需求抽到单独 WallpaperService）
     private func setWallpaper(data: Data) async throws {
@@ -208,6 +245,38 @@ final class ImageViewModel: ObservableObject {
     private static func decodeFavorites(from data: Data) -> [ImageItem] {
         guard !data.isEmpty else { return [] }
         return (try? JSONDecoder().decode([ImageItem].self, from: data)) ?? []
+    }
+
+    private func resolvedImageLink(for item: ImageItem) -> String {
+        item.url.isEmpty ? item.download_url : item.url
+    }
+
+    private func resolvedImageLinks(for item: ImageItem) -> [String] {
+        var links: [String] = []
+        let primary = item.url.trimmingCharacters(in: .whitespacesAndNewlines)
+        let secondary = item.download_url.trimmingCharacters(in: .whitespacesAndNewlines)
+        if primary.isEmpty == false { links.append(primary) }
+        if secondary.isEmpty == false, secondary != primary { links.append(secondary) }
+        return links
+    }
+
+    private func saveImageData(_ data: Data, itemId: String) throws -> URL {
+        let fileName = "wallpaper_\(itemId).jpg"
+        let fileManager = FileManager.default
+
+        if let downloadsURL = fileManager.urls(for: .downloadsDirectory, in: .userDomainMask).first {
+            let downloadFileURL = downloadsURL.appendingPathComponent(fileName)
+            do {
+                try data.write(to: downloadFileURL, options: .atomic)
+                return downloadFileURL
+            } catch {
+                // Continue to temporary directory fallback.
+            }
+        }
+
+        let tempURL = fileManager.temporaryDirectory.appendingPathComponent(fileName)
+        try data.write(to: tempURL, options: .atomic)
+        return tempURL
     }
 }
 

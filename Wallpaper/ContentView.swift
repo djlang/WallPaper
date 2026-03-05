@@ -58,16 +58,40 @@ struct ContentView: View {
                                         previewItem = item
                                     }
 
-                                Button {
-                                    viewModel.toggleFavorite(item)
-                                } label: {
-                                    Image(systemName: viewModel.isFavorite(item) ? "heart.fill" : "heart")
-                                        .font(.headline)
-                                        .foregroundStyle(viewModel.isFavorite(item) ? .red : .white)
-                                        .padding(8)
-                                        .background(.black.opacity(0.45), in: Circle())
+                                HStack(spacing: 8) {
+                                    Button {
+                                        Task { await viewModel.downloadImage(for: item) }
+                                    } label: {
+                                        Image(systemName: "arrow.down.circle.fill")
+                                            .font(.headline)
+                                            .foregroundStyle(.white)
+                                            .padding(8)
+                                            .background(.black.opacity(0.45), in: Circle())
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    Button {
+                                        viewModel.copyImageLink(for: item)
+                                    } label: {
+                                        Image(systemName: "doc.on.doc.fill")
+                                            .font(.headline)
+                                            .foregroundStyle(.white)
+                                            .padding(8)
+                                            .background(.black.opacity(0.45), in: Circle())
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    Button {
+                                        viewModel.toggleFavorite(item)
+                                    } label: {
+                                        Image(systemName: viewModel.isFavorite(item) ? "heart.fill" : "heart")
+                                            .font(.headline)
+                                            .foregroundStyle(viewModel.isFavorite(item) ? .red : .white)
+                                            .padding(8)
+                                            .background(.black.opacity(0.45), in: Circle())
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
                                 .padding(10)
                             }
                         }
