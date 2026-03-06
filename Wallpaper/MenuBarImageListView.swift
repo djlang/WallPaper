@@ -23,10 +23,10 @@ struct MenuBarImageListView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("Picsum 图片")
+                Text("墙纸")
                     .font(.headline)
                 Spacer()
-                Button("随机壁纸") {
+                Button("随机墙纸") {
                     Task { await viewModel.fetchAndSetRandomWallpaper() }
                 }
                 .disabled(viewModel.isSettingWallpaper)

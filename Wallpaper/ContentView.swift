@@ -113,7 +113,7 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("Picsum 图片")
+            .navigationTitle("墙纸")
             .toolbar {
                 ToolbarItem {
                     Button("刷新") {

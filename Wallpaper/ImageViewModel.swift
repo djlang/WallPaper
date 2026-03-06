@@ -199,6 +199,18 @@ final class ImageViewModel: ObservableObject {
     }
 
     func downloadImage(for item: ImageItem) async {
+        let panel = NSSavePanel()
+        panel.title = "选择保存位置"
+        panel.nameFieldStringValue = "wallpaper_\(item.id).jpg"
+        panel.canCreateDirectories = true
+        panel.isExtensionHidden = false
+        panel.directoryURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first
+
+        let response = panel.runModal()
+        guard response == .OK, let targetURL = panel.url else {
+            return
+        }
+
         let links = resolvedImageLinks(for: item)
         guard links.isEmpty == false else {
             errorMessage = "下载失败：图片链接无效"
@@ -210,8 +222,8 @@ final class ImageViewModel: ObservableObject {
             guard let url = URL(string: link) else { continue }
             do {
                 let data = try await service.fetchImageData(from: url)
-                let savedURL = try saveImageData(data, itemId: item.id)
-                errorMessage = "已下载到：\(savedURL.lastPathComponent)"
+                try data.write(to: targetURL, options: .atomic)
+                errorMessage = "已下载到：\(targetURL.lastPathComponent)"
                 return
             } catch {
                 lastError = error
@@ -260,24 +272,6 @@ final class ImageViewModel: ObservableObject {
         return links
     }
 
-    private func saveImageData(_ data: Data, itemId: String) throws -> URL {
-        let fileName = "wallpaper_\(itemId).jpg"
-        let fileManager = FileManager.default
-
-        if let downloadsURL = fileManager.urls(for: .downloadsDirectory, in: .userDomainMask).first {
-            let downloadFileURL = downloadsURL.appendingPathComponent(fileName)
-            do {
-                try data.write(to: downloadFileURL, options: .atomic)
-                return downloadFileURL
-            } catch {
-                // Continue to temporary directory fallback.
-            }
-        }
-
-        let tempURL = fileManager.temporaryDirectory.appendingPathComponent(fileName)
-        try data.write(to: tempURL, options: .atomic)
-        return tempURL
-    }
 }
 
 
